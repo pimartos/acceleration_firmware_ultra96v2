@@ -6,7 +6,7 @@
 
 This repository provides Xilinx's firmware artifacts for the ultra96v2 board meant to accelerate ROS 2 robotic applications.
 
-<ins>**NOTE**</ins>: *This repository is has various **GB** of data. Due to GitHub size restrictions, the whole source code is available under [releases](https://github.com/ros-acceleration/acceleration_firmware_ultra96v2/releases)*. *Refer to each corresponding's release `firmware/ARTIFACTS.md` file for a description of all the artifacts included*.
+<ins>**NOTE**</ins>: *This repository is has various **GB** of data. Due to GitHub size restrictions, the whole source code is available under [releases](https://github.com/pimartos/acceleration_firmware_ultra96v2/releases)*. *Refer to each corresponding's release `firmware/ARTIFACTS.md` file for a description of all the artifacts included*.
 
 ## Hardware Acceleration capabilities
 
