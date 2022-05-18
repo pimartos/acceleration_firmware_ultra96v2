@@ -119,8 +119,8 @@ if you receive a
 Something went wrong while creating sd card image.
 Review the output: gzip: stdin: unexpected end of file
 This means that the rootfs.cpio.gz file wasn't installed correctly, do a 
-cp ~/krs_ws/src/acceleration/acceleration_firmware_ultra96v2/firmware/rootfs.cpio.gz ~/krs_ws/acceleration/firmware/ultra96v2/rootfs.cpio.gz
-sync
+$ cp ~/krs_ws/src/acceleration/acceleration_firmware_ultra96v2/firmware/rootfs.cpio.gz ~/krs_ws/acceleration/firmware/ultra96v2/rootfs.cpio.gz
+$ sync
 and run the command again
 ```
 
@@ -499,13 +499,28 @@ extern "C" {
 Note how instead of one `for` loop, we now have two, simulating a more complex computation. Let's try this out in hardware. Provided that the image was previously created, we just need to replace the ROS 2 workspace, the rest should be identical. You can do this in various ways (physically mounting the raw image in the SD card, `scp`-ing the ROS 2 workspace, etc.).
 
 Briefly, in the workstation:
+
+First we need to rebuild the vitis_common library for the ultra96 (when you do a "colcon build --merge-install", it builds for x86_64
+
+```
+bash
+# generate the vitis_common.a library and copy it to the install directory
+$ colcon build --build-base=build-ultra96v2 --install-base=install-ultra96v2 --merge-install --mixin ultra96v2 --packages-select vitis_common
+$ cp ./install-ultra96v2/lib/libvitis_common.a ./install/lib
+```
+Now we build the `doublevadd_publisher`
+
 ```bash
 # generate the workspace with doublevadd_publisher (if exists already, add to it)
-$ colcon build --build-base=build-kv260 --install-base=install-kv260 --merge-install --mixin kv260 --packages-select ament_vitis doublevadd_publisher
+$ colcon build --build-base=build-ultra96v2 --install-base=install-ultra96v2 --merge-install --mixin ultra96v2 --packages-select ament_vitis doublevadd_publisher
 
 # copy to rootfs in SD card, e.g.
-$ scp -r install-kv260/* petalinux@192.168.1.86:/ros2_ws/
+$ sudo scp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
+$ sync
+```
+And in the board:
 
+```
 # Launch doublevadd_publisher
 $ source /usr/bin/ros_setup.bash  # source the ROS 2 installation
 
@@ -517,23 +532,23 @@ $ ros2 topic hz /vector --window 10 &
 $ ros2 run doublevadd_publisher doublevadd_publisher
 
 ...
-[INFO] [1629656740.225647854] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 11'
-[INFO] [1629656740.675023646] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 12'
-[INFO] [1629656741.124260679] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 13'
-average rate: 2.226
-	min: 0.449s max: 0.449s std dev: 0.00011s window: 10
-[INFO] [1629656741.573462323] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 14'
-[INFO] [1629656742.022713366] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 15'
-[INFO] [1629656742.471917079] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 16'
-average rate: 2.226
-	min: 0.449s max: 0.449s std dev: 0.00011s window: 10
-[INFO] [1629656742.921175382] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 17'
-[INFO] [1629656743.370423695] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 18'
-[INFO] [1629656743.819651828] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 19'
-average rate: 2.226
-	min: 0.449s max: 0.449s std dev: 0.00010s window: 10
-[INFO] [1629656744.268874211] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 20'
+average rate: 2.002
+        min: 0.499s max: 0.500s std dev: 0.00048s window: 7
+[INFO] [1520602117.155020380] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 8'
+[INFO] [1520602117.654437760] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 9'
+[INFO] [1520602118.153748470] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 10'
+average rate: 2.002
+        min: 0.499s max: 0.500s std dev: 0.00048s window: 10
+[INFO] [1520602118.653036080] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 11'
+[INFO] [1520602119.152649810] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 12'
+[INFO] [1520602119.652019040] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 13'
+average rate: 2.002
+        min: 0.499s max: 0.500s std dev: 0.00049s window: 10
+[INFO] [1520602120.151378600] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 14'
+[INFO] [1520602120.650732750] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 15'
+[INFO] [1520602121.150203450] [doublevadd_publisher]: Publishing: 'vadd finished, iteration: 16'
+
 ...
 ```
 
-This new publisher achieves only `2.2 Hz`, quite far from the `10 Hz` targeted. Using hardware acceleration, future examples will demonstrate how to build a custom compute pipeline that offloads computations to a kernel. *If you wish to jump directly into hardware acceleration with `doublevadd_publisher`, head to: [3. Offloading ROS 2 publisher](3_offloading_ros2_publisher)*.
+This new publisher achieves only `2.0 Hz`, quite far from the `10 Hz` targeted. Using hardware acceleration, future examples will demonstrate how to build a custom compute pipeline that offloads computations to a kernel. *If you wish to jump directly into hardware acceleration with `doublevadd_publisher`, head to: [3. Offloading ROS 2 publisher](offloadingROS2publisher.md)*.
