@@ -974,7 +974,7 @@ vitis_hls_generate_tcl(
 
 Note that the macro will generate one solution per each `CLOCK` (in ns) argument provided. 
 
-Let's compare the *Schedule Viewer* of the `4 ns` and `10 ns` clock solutions. *These were generated with a different firmware (`zcu102`). Similar ones can be also obtained with the KV260 board. See [Hello Xilinx example](1_hello_xilinx/) if you need to recap on how to switch between multiple firmware options ;)*.
+Let's compare the *Schedule Viewer* of the `4 ns` and `10 ns` clock solutions.
 
 
 | Image | Comments |
@@ -982,164 +982,10 @@ Let's compare the *Schedule Viewer* of the `4 ns` and `10 ns` clock solutions. *
 | ![](../../_images/5.png) | Targeting `4 ns` clock. Note the whole operation takes 4 cycles. |
 | ![](../../_images/6.png) | Targeting `10 ns` clock. Note the whole operation takes 2 cycles. |
 
-Futher inspecting the solutions with `colcon` CLI extensions:
+Futher inspecting the solutions with `colcon` CLI extensions (see output above)
 
 ```bash
 $ colcon acceleration hls simple_adder --synthesis-report
- Project:  project_simpleadder2
- Path:  /home/xilinx/krs_ws/build-kv260/simple_adder/project_simpleadder2
- 	- Solution:  solution_4ns
- 		- C Simulation:               Pass
- 		- C Synthesis:                Run
- 		- C/RTL Co-simulation:        Not Run
-		- Export:
- 			- IP Catalog:         Not Run
- 			- System Generator:   Not Run
- 			- Export Evaluation:  Not Run
-		- Synthesis report: /home/xilinx/krs_ws/build-kv260/simple_adder/project_simpleadder2/solution_4ns/syn/report/simple_adder_csynth.rpt
-
-
-  			================================================================
-  			== Vitis HLS Report for 'simple_adder'
-  			================================================================
-  			* Date:           Sun Aug 22 15:58:17 2021
-
-  			* Version:        2020.2.2 (Build 3118627 on Tue Feb  9 05:13:49 MST 2021)
-  			* Project:        project_simpleadder2
-  			* Solution:       solution_4ns (Vitis Kernel Flow Target)
-  			* Product family: zynquplus
-  			* Target device:  xck26-sfvc784-2LV-c
-
-
-  			================================================================
-  			== Performance Estimates
-  			================================================================
-  			+ Timing:
-  			    * Summary:
-  			    +--------+---------+----------+------------+
-  			    |  Clock |  Target | Estimated| Uncertainty|
-  			    +--------+---------+----------+------------+
-  			    |ap_clk  |  4.00 ns|  2.365 ns|     1.08 ns|
-  			    +--------+---------+----------+------------+
-
-  			+ Latency:
-  			    * Summary:
-  			    +---------+---------+-----------+-----------+-----+-----+---------+
-  			    |  Latency (cycles) |   Latency (absolute)  |  Interval | Pipeline|
-  			    |   min   |   max   |    min    |    max    | min | max |   Type  |
-  			    +---------+---------+-----------+-----------+-----+-----+---------+
-  			    |        5|        5|  20.000 ns|  20.000 ns|    6|    6|     none|
-  			    +---------+---------+-----------+-----------+-----+-----+---------+
-
-  			    + Detail:
-  			        * Instance:
-  			        N/A
-
-  			        * Loop:
-  			        N/A
-
-
-
-  			================================================================
-  			== Utilization Estimates
-  			================================================================
-  			* Summary:
-  			+-----------------+---------+------+--------+--------+-----+
-  			|       Name      | BRAM_18K|  DSP |   FF   |   LUT  | URAM|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|DSP              |        -|     -|       -|       -|    -|
-  			|Expression       |        -|     -|       0|      41|    -|
-  			|FIFO             |        -|     -|       -|       -|    -|
-  			|Instance         |        0|     0|     639|     379|    -|
-  			|Memory           |        -|     -|       -|       -|    -|
-  			|Multiplexer      |        -|     -|       -|      46|    -|
-  			|Register         |        -|     -|     106|       -|    -|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|Total            |        0|     0|     745|     466|    0|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|Available        |      288|  1248|  234240|  117120|   64|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|Utilization (%)  |        0|     0|      ~0|      ~0|    0|
-  			+-----------------+---------+------+--------+--------+-----+
-
-...
-
-  	- Solution:  solution_10ns
- 		- C Simulation:               Pass
- 		- C Synthesis:                Run
- 		- C/RTL Co-simulation:        Not Run
-		- Export:
- 			- IP Catalog:         Not Run
- 			- System Generator:   Not Run
- 			- Export Evaluation:  Not Run
-		- Synthesis report: /home/xilinx/krs_ws/build-kv260/simple_adder/project_simpleadder2/solution_10ns/syn/report/simple_adder_csynth.rpt
-
-
-  			================================================================
-  			== Vitis HLS Report for 'simple_adder'
-  			================================================================
-  			* Date:           Sun Aug 22 15:58:23 2021
-
-  			* Version:        2020.2.2 (Build 3118627 on Tue Feb  9 05:13:49 MST 2021)
-  			* Project:        project_simpleadder2
-  			* Solution:       solution_10ns (Vitis Kernel Flow Target)
-  			* Product family: zynquplus
-  			* Target device:  xck26-sfvc784-2LV-c
-
-
-  			================================================================
-  			== Performance Estimates
-  			================================================================
-  			+ Timing:
-  			    * Summary:
-  			    +--------+----------+----------+------------+
-  			    |  Clock |  Target  | Estimated| Uncertainty|
-  			    +--------+----------+----------+------------+
-  			    |ap_clk  |  10.00 ns|  5.436 ns|     2.70 ns|
-  			    +--------+----------+----------+------------+
-
-  			+ Latency:
-  			    * Summary:
-  			    +---------+---------+-----------+-----------+-----+-----+---------+
-  			    |  Latency (cycles) |   Latency (absolute)  |  Interval | Pipeline|
-  			    |   min   |   max   |    min    |    max    | min | max |   Type  |
-  			    +---------+---------+-----------+-----------+-----+-----+---------+
-  			    |        1|        1|  10.000 ns|  10.000 ns|    2|    2|     none|
-  			    +---------+---------+-----------+-----------+-----+-----+---------+
-
-  			    + Detail:
-  			        * Instance:
-  			        N/A
-
-  			        * Loop:
-  			        N/A
-
-
-
-  			================================================================
-  			== Utilization Estimates
-  			================================================================
-  			* Summary:
-  			+-----------------+---------+------+--------+--------+-----+
-  			|       Name      | BRAM_18K|  DSP |   FF   |   LUT  | URAM|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|DSP              |        -|     -|       -|       -|    -|
-  			|Expression       |        -|     -|       0|      41|    -|
-  			|FIFO             |        -|     -|       -|       -|    -|
-  			|Instance         |        0|     0|     144|     292|    -|
-  			|Memory           |        -|     -|       -|       -|    -|
-  			|Multiplexer      |        -|     -|       -|      32|    -|
-  			|Register         |        -|     -|      70|       -|    -|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|Total            |        0|     0|     214|     365|    0|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|Available        |      288|  1248|  234240|  117120|   64|
-  			+-----------------+---------+------+--------+--------+-----+
-  			|Utilization (%)  |        0|     0|      ~0|      ~0|    0|
-  			+-----------------+---------+------+--------+--------+-----+
-
-...
-
 ```
 
 **We observe how using a target `10 ns` clock (which is slower than `4 ns`) leads to a) the use of less LUT and FF resources and b) a lower latency (due to a smaller number of cycles required)**. It's pretty interesting to note that getting a higher frequency in the clock does not necesarily mean we'll obtain a lower period for the function. This happens very clearly in this case.
@@ -1147,14 +993,15 @@ $ colcon acceleration hls simple_adder --synthesis-report
 
 `colcon` CLI tooling also allows to obtain a quick summary of all the solutions to evaluate time and use of resources:
 
-```bash
+```
+bash
 $ colcon acceleration hls simple_adder --summary
-# /home/xilinx/krs_ws/build-kv260/simple_adder/project_simpleadder2.tcl
+# /media/usuario/SeagateLinux/krs_ws/build-ultra96v2/simple_adder/project_simpleadder2.tcl
 Solution#	tar.clk	est.clk		latency_max	BRAM_18K	DSP	FF		LUT
-solution_10ns	10.00	5.436		10.000		0 (0%)		0 (0%)	214 (~0%)	365 (~0%)
-solution_4ns	4.00	2.365		20.000		0 (0%)		0 (0%)	745 (~0%)	466 (~0%)
-# /home/xilinx/krs_ws/build-kv260/simple_adder/project_simpleadder1.tcl
+solution_10ns	10.00	6.083		10.000		0 (0%)		9 (2%)	221 (~0%)	367 (~0%)	
+solution_4ns	4.00	2.683		28.000		0 (0%)		9 (2%)	757 (~0%)	480 (~0%)	
+# /media/usuario/SeagateLinux/krs_ws/build-ultra96v2/simple_adder/project_simpleadder1.tcl
 Solution#	tar.clk	est.clk		latency_max	BRAM_18K	DSP	FF		LUT
-solution_4ns	4.00	2.016		0		0 (0%)		0 (0%)	181 (~0%)	291 (~0%)
+solution_4ns	4.00	2.203		0		0 (0%)		0 (0%)	188 (~0%)	293 (~0%)	
 ```
 
