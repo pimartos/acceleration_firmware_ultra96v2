@@ -168,7 +168,7 @@ This is because every accelerator needs a `shell.json` file. We have a `base` an
 bash
 $ source /usr/bin/ros_setup.bash  # source the ROS 2 installation
 
-$ . /ros2_ws/local_setup.bash     # source the ROS 2 overlay workspace we just 
+$ . /krs_ws/local_setup.bash     # source the ROS 2 overlay workspace we just 
                                   # created. Note it has been copied to the SD 
                                   # card image while being created.
 
@@ -188,6 +188,16 @@ vi /lib/firmware/xilinx/offloaded_doublevadd_publisher/shell.json
     "num_slots": "1"
 }
 
+# reboot
+$ shutdown -r now
+
+$ source /usr/bin/ros_setup.bash  # source the ROS 2 installation
+
+$ . /krs_ws/local_setup.bash     # source the ROS 2 overlay workspace we just 
+                                  # created. Note it has been copied to the SD 
+                                  # card image while being created.
+
+
 # restart the daemon that manages the acceleration kernels, now with the shell.json files
 $ ros2 acceleration stop; ros2 acceleration start
 
@@ -205,9 +215,8 @@ $ xmutil unloadapp
 $ xmutil listapps 
 $ xmutil loadapp offloaded_doublevadd_publisher
 
-
 # launch binary 
-$ cd /ros2_ws/lib/offloaded_doublevadd_publisher
+$ cd /krs_ws/lib/offloaded_doublevadd_publisher
 $ ros2 topic hz /vector_acceleration --window 10 &
 $ ros2 run offloaded_doublevadd_publisher offloaded_doublevadd_publisher
 
