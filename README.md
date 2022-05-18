@@ -49,7 +49,7 @@ According to [REP-2008's proposal](https://github.com/ros-infrastructure/rep/pul
 | **`5.` Documentation** | |
 | [`5.i` in-code documentation](https://ros.org/reps/rep-2008.html#id20) | ✓ |
 | **`6.` Testing and CI** | |
-| [`6.i` `acceleration_examples` ](https://ros.org/reps/rep-2008.html#id21) | :warning: |
+| [`6.i` `acceleration_examples` ](https://ros.org/reps/rep-2008.html#id21) | ✓ |
 
 
 ### Quality Declaration
