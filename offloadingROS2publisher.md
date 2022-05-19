@@ -172,8 +172,8 @@ $ . /krs_ws/local_setup.bash     # source the ROS 2 overlay workspace we just
                                   # created. Note it has been copied to the SD 
                                   # card image while being created.
 
-# restart the daemon that manages the acceleration kernels to create /lib/firmware/xilinx/offloaded_doublevadd_publisher
-$ ros2 acceleration stop; ros2 acceleration start
+# stop the daemon that manages the acceleration kernels to create /lib/firmware/xilinx/offloaded_doublevadd_publisher
+$ ros2 acceleration stop
 
 # add shell.json files
 vi /lib/firmware/xilinx/base/shell.json
