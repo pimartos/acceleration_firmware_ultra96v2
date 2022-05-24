@@ -91,7 +91,6 @@ return 0;
 
 ## Launch `hello_xilinx` example in the workstation
 ```bash
-$ source install/setup.bash  # source the overlay workspace
 $ ros2 run publisher_xilinx member_function_publisher
 [INFO] [1618407842.800443167] [minimal_publisher]: Publishing: 'Hello, Xilinx! 0'
 [INFO] [1618407843.300407127] [minimal_publisher]: Publishing: 'Hello, Xilinx! 1'
