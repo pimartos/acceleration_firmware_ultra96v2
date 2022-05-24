@@ -33,9 +33,6 @@ repositories:
     type: git
     url: https://github.com/ros-acceleration/acceleration_firmware
     version: 0.4.0
-  acceleration:
-    type: zip
-    url: https://github.com/pimartos/acceleration_firmware_ultra96v2/releases/download/acceleration_firmware_ultra96v2-krs_alpha_v1.0.0/acceleration_firmware_ultra96v2.zip
   acceleration/colcon-acceleration:
     type: git
     url: https://github.com/ros-acceleration/colcon-acceleration
@@ -57,7 +54,7 @@ EOF
 ###################################################
 # 4. import repos of KRS alpha release
 ###################################################
-vcs import src --recursive < krs_alpha_ultra96v2.repos  # about 10 mins (1.7 GB download)
+vcs import src --recursive < krs_alpha_ultra96v2.repos  # about 2 mins
 
 ###################################################
 # 5. modifiy ros2 acceleration list verb
@@ -72,7 +69,12 @@ With
             print(outs)
 
 ###################################################
-# 6. build the workspace and deploy firmware for hardware acceleration
+# 6. get acceleration_firmware_ultra96v2 (1.7 GB Download)
+###################################################
+cd src && wget https://github.com/pimartos/acceleration_firmware_ultra96v2/releases/download/acceleration_firmware_ultra96v2-krs_alpha_v1.0.0/acceleration_firmware_ultra96v2.zip && unzip acceleration_firmware_ultra96v2.zip && cd ..
+
+###################################################
+# 7. build the workspace and deploy firmware for hardware acceleration
 ###################################################
 source /tools/Xilinx/Vitis/2021.2/settings64.sh  # source Xilinx tools
 source /opt/ros/foxy/setup.bash  # Sources system ROS 2 installation.
@@ -83,12 +85,12 @@ export PATH="/usr/bin":$PATH  # FIXME: adjust path for CMake 3.5+
 colcon build --merge-install  # about 2 mins
 
 ###################################################
-# 7. source the overlay to enable all features
+# 8. source the overlay to enable all features
 ###################################################
 source install/setup.bash
 
 ###################################################
-# 8. Copy the rootfs.cpio.gz file by hand (sometimes it doesn't install)
+# 8. Copy the rootfs.cpio.gz file by hand (due it's size, sometimes it doesn't install automatically)
 ###################################################
 $ cp ./src/acceleration/acceleration_firmware_ultra96v2/firmware/rootfs.cpio.gz ./acceleration/firmware/ultra96v2/rootfs.cpio.gz
 $ sync
