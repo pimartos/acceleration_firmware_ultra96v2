@@ -48,17 +48,8 @@ $ source /tools/Xilinx/Vitis/2020.2/settings64.sh  # source Xilinx tools
 $ source /opt/ros/foxy/setup.bash  # Sources system ROS 2 installation
 $ export PATH="/usr/bin":$PATH  # FIXME: adjust path for CMake 3.5+
 
-# build the workspace
-$ colcon build --merge-install  # about 2 mins
-
-# source the workspace as an overlay
-$ source install/setup.bash
-
-# After a "colcon build --merge-install" the vitis_common library rebuilds for x86_64, so it's necessary to copy the ARM version to the INSTALL dir
-$ cp ./install-ultra96v2/lib/libvitis_common.a ./install/lib
-
 ```
-
+Source Code:
 ```
 cpp 
 /*
