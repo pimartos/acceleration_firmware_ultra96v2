@@ -123,7 +123,7 @@ debug=1
 data=all:all:all
 ```
 
-Modify the CMakeLists.txt file
+Modify the CMakeLists.txt file (~krs_ws/src/acceleration_examples/offloaded_doublevadd_publisher/CMakeLists.txt)
 ```
 Replace in line 59:
       CONFIG src/kv260.cfg
