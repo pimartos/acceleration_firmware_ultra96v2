@@ -26,7 +26,7 @@ This example demonstrates how KRS helps to transition from the Xilinx's Vitis-ce
     `Learn ROS 2 <https://docs.ros.org/>`_ before trying this out first.
 ```
 
-## Prepare the environment and fetch the example
+## Prepare the environment 
 
 ```bash
 $ cd ~/krs_ws  # head to your KRS workspace
@@ -35,13 +35,6 @@ $ cd ~/krs_ws  # head to your KRS workspace
 $ source /tools/Xilinx/Vitis/2020.2/settings64.sh  # source Xilinx tools
 $ source /opt/ros/foxy/setup.bash  # Sources system ROS 2 installation
 $ export PATH="/usr/bin":$PATH  # FIXME: adjust path for CMake 3.5+
-
-# build the workspace
-$ colcon build --merge-install  # about 2 mins
-
-# source the workspace as an overlay
-$ source install/setup.bash
-$ cp ./install-ultra96v2/lib/libvitis_common.a ./install/lib
 ```
 
 ## A bit of background on HLS, RTL and FPGAs
