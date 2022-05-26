@@ -121,7 +121,7 @@ $ colcon build --build-base=build-ultra96v2 --install-base=install-ultra96v2 --m
 
 Now copy to the rootfs in the sd card:
 ```bash
-$ sudo scp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
+$ sudo cp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
 $ sync
 ```
 
