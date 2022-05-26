@@ -142,7 +142,7 @@ $ colcon acceleration select ultra96v2
 $ colcon build --build-base=build-ultra96v2 --install-base=install-ultra96v2 --merge-install --mixin ultra96v2 --packages-select ament_vitis ros2acceleration offloaded_doublevadd_publisher
 
 # copy to SD card rootfs:
-$ sudo scp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
+$ sudo cp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
 $ sync
 ```
 
