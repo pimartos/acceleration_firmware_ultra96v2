@@ -515,7 +515,7 @@ Now we build the `doublevadd_publisher`
 $ colcon build --build-base=build-ultra96v2 --install-base=install-ultra96v2 --merge-install --mixin ultra96v2 --packages-select ament_vitis doublevadd_publisher
 
 # copy to rootfs in SD card, e.g.
-$ sudo scp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
+$ sudo cp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
 $ sync
 ```
 And in the board:
