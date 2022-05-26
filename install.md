@@ -92,7 +92,7 @@ source install/setup.bash
 ###################################################
 # 8. Copy the rootfs.cpio.gz file by hand (due it's size, sometimes it doesn't install automatically)
 ###################################################
-$ cp ./src/acceleration/acceleration_firmware_ultra96v2/firmware/rootfs.cpio.gz ./acceleration/firmware/ultra96v2/
+$ cp ./src/acceleration_firmware_ultra96v2/firmware/rootfs.cpio.gz ./acceleration/firmware/ultra96v2/
 $ sync
 
 
