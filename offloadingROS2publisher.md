@@ -204,14 +204,10 @@ Accelerator                            Base                            Type     
                             base                            base       XRT_FLAT         0                  -1
 
 # select the offloaded_doublevadd_publisher (needs to be loaded twice, one with ros2 acceleration select and other with xmutil)
+$ cd /krs_ws/lib/offloaded_doublevadd_publisher
 $ ros2 acceleration select offloaded_doublevadd_publisher
-$ xmutil listapps 
-$ xmutil unloadapp
-$ xmutil listapps 
-$ xmutil loadapp offloaded_doublevadd_publisher
 
 # launch binary 
-$ cd /krs_ws/lib/offloaded_doublevadd_publisher
 $ ros2 topic hz /vector_acceleration --window 10 &
 $ ros2 run offloaded_doublevadd_publisher offloaded_doublevadd_publisher
 
