@@ -35,7 +35,7 @@ The ultimate objective of this example is to illustrate roboticists how **more d
 
 ## `offloaded_doublevadd_publisher`
 
-The kernel is identical to the one presented in [0. ROS 2 publisher](ROS2publisher.md).
+The kernel is identical to the one presented in [0. ROS 2 publisher](ROS2publisher.md) with a small modification in the vector size
 
 Let's setup the envirnonment in the workstation:
 
@@ -68,7 +68,10 @@ See https://github.com/Xilinx/Vitis-Tutorials/blob/master/Getting_Started/Vitis
 
 */
 
-#define DATA_SIZE 4096
+// Vector size change
+// #define DATA_SIZE 4096
+#define DATA_SIZE 4032
+
 // TRIPCOUNT identifier
 const int c_size = DATA_SIZE;
 
@@ -91,6 +94,32 @@ extern "C" {
     }
 }
 ```
+We need to change the vector size and make the buffers four times bigger in `offloaded_doublevadd_pubisher.cpp` (/src/acceleration_examples/offloaded_doublevadd_publisher/src) 
+
+in line 9
+```
+#define DATA_SIZE 4032
+```
+in lines 91-96
+```
+  cl::Buffer in1_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+  cl::Buffer in2_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+  cl::Buffer out_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+```
+in line 103 add the fourth argument to the kernel (vector size)
+```
+krnl_vector_add.setArg(3, DATA_SIZE);
+```
+in lines 106-108
+```
+int *in1 = (int *)q.enqueueMapBuffer(in1_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+int *in2 = (int *)q.enqueueMapBuffer(in2_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+int *out = (int *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+```
+
 
 The only difference in this package is that it declares a kernel on its CMakeLists.txt file using the `vitis_acceleration_kernel` CMake macro:
 
@@ -231,3 +260,6 @@ average rate: 1.935
 The publishing rate is `1.935 Hz`, which is lower than the `2.2 Hz` obtained in [0. ROS 2 publisher](0_ros2_publisher/). As introduced before and also in example [2. HLS in ROS 2](2_hls_ros2/), the rationale behind this is a combination of two aspects:
 - First, the CPU clock is generally faster than the FPGA one, which means that pure offloading of operations (unless dataflow is optimized) are deterministic, but most of the time subject to be coherent with the slower clock.
 - Second, the computation needs to be adapted to the dataflow and parallelism exploited (if available).
+
+NOTE:
+The change in the vector size and bigger buffers are necessary due to a some kind of misalignment between the physical memory in the accelerator, the memory object in the openCL runtime and the userland pointers. At some position we get a 0 result from the accelerator. With these changes, things work as expected. Probably this happens because we are using direct mapping (a userland pointer that access directly the memory in the accelerator). Perhaps the use of a dedicated openCL buffer and a separated userland buffer with transfers between them should be a better approach
