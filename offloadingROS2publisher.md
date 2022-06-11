@@ -176,7 +176,7 @@ $ sudo cp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
 $ sync
 ```
 
-Since this package contains a kernel and we're using the Vitis `hw` build target (*more on Vitis build targets in future tutorials*), it'll take a bit longer to build the package. In an *Intel i7 10th* it took **15 minutes**, so go for a cup of coffe.
+Since this package contains a kernel and we're using the Vitis `hw` build target (*more on Vitis build targets in future tutorials*), it'll take a bit longer to build the package. In an *Intel i7 10th with 32GB RAM* it took **15 minutes**, so go for a cup of coffe.
 
 Note also the process is *slightly different* this time since we have an acceleration kernel. Before launching the binary in the CPUs, we need to load the kernel in the FPGA. For that, we'll be using some of the extensions KRS provides to the ROS 2 CLI tooling, particularly the `ros2 acceleration` suite:
 
