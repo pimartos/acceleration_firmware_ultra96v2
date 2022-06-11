@@ -172,7 +172,7 @@ $ sync
 ```
 
 and run it:
-```
+
 Every accelerator needs a `shell.json` file:
 ```
 bash
