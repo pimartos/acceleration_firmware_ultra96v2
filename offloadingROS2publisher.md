@@ -222,9 +222,15 @@ $ . /krs_ws/local_setup.bash     # source the ROS 2 overlay workspace we just
                                   # created. Note it has been copied to the SD 
                                   # card image while being created.
 
+# Change to the accelerator directory
+$ cd /krs_ws/lib/offloaded_doublevadd_publisher
 
-# restart the daemon that manages the acceleration kernels, now with the shell.json files
-$ ros2 acceleration stop; ros2 acceleration start
+# Load the accelerator 
+$ ros2 acceleration select offloaded_doublevadd_publisher
+
+# restart the daemon that manages the acceleration kernels
+$ ros2 acceleration stop
+$ ros2 acceleration start
 
 # list the accelerators
 $ ros2 acceleration list
@@ -233,8 +239,7 @@ Accelerator                            Base                            Type     
   offloaded_doublevadd_publisher  offloaded_doublevadd_publisher       XRT_FLAT         0                  -1
                             base                            base       XRT_FLAT         0                  -1
 
-# select the offloaded_doublevadd_publisher (needs to be loaded twice, one with ros2 acceleration select and other with xmutil)
-$ cd /krs_ws/lib/offloaded_doublevadd_publisher
+# select the offloaded_doublevadd_publisher
 $ ros2 acceleration select offloaded_doublevadd_publisher
 
 # launch binary 
