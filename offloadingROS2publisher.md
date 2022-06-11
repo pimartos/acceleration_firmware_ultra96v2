@@ -246,26 +246,33 @@ $ ros2 acceleration select offloaded_doublevadd_publisher
 $ ros2 topic hz /vector_acceleration --window 10 &
 $ ros2 run offloaded_doublevadd_publisher offloaded_doublevadd_publisher
 
-[INFO] [1629663768.633315230] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 6'
-[INFO] [1629663769.150109773] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 7'
-average rate: 1.935
-	min: 0.517s max: 0.517s std dev: 0.00010s window: 7
-[INFO] [1629663769.666922955] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 8'
-[INFO] [1629663770.183640105] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 9'
-average rate: 1.935
-	min: 0.517s max: 0.517s std dev: 0.00010s window: 9
-[INFO] [1629663770.700318913] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 10'
-[INFO] [1629663771.217068001] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 11'
-average rate: 1.935
-	min: 0.517s max: 0.517s std dev: 0.00010s window: 10
-[INFO] [1629663771.733872538] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 12'
-[INFO] [1629663772.250599612] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 13'
+[INFO] [1520599663.156563610] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 6'
+average rate: 0.558
+        min: 1.792s max: 1.794s std dev: 0.00048s window: 6
+[INFO] [1520599664.949324690] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 7'
+average rate: 0.558
+        min: 1.792s max: 1.794s std dev: 0.00053s window: 7
+[INFO] [1520599666.742386630] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 8'
+average rate: 0.558
+        min: 1.792s max: 1.794s std dev: 0.00050s window: 8
+[INFO] [1520599668.535174830] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 9'
+average rate: 0.558
+        min: 1.792s max: 1.794s std dev: 0.00052s window: 9
+[INFO] [1520599670.328085390] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 10'
+average rate: 0.558
+        min: 1.792s max: 1.794s std dev: 0.00049s window: 10
+[INFO] [1520599672.121017030] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 11'
+average rate: 0.558
+        min: 1.792s max: 1.794s std dev: 0.00047s window: 10
+[INFO] [1520599673.913815520] [accelerated_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 12'
+
 ...
 ```
 
-The publishing rate is `1.935 Hz`, which is lower than the `2.2 Hz` obtained in [0. ROS 2 publisher](0_ros2_publisher/). As introduced before and also in example [2. HLS in ROS 2](2_hls_ros2/), the rationale behind this is a combination of two aspects:
+The publishing rate is `0.5 Hz`, which is lower than the `2.2 Hz` obtained in [0. ROS 2 publisher](0_ros2_publisher/). As introduced before and also in example [2. HLS in ROS 2](2_hls_ros2/), the rationale behind this is a combination of two aspects:
 - First, the CPU clock is generally faster than the FPGA one, which means that pure offloading of operations (unless dataflow is optimized) are deterministic, but most of the time subject to be coherent with the slower clock.
 - Second, the computation needs to be adapted to the dataflow and parallelism exploited (if available).
+- Third, we are using buffers that are four times bigger, the transfer time needs to be taken into acount
 
 NOTE:
 The change in the vector size and bigger buffers are necessary due to a some kind of misalignment between the physical memory in the accelerator, the memory object in the openCL runtime and the userland pointers. At some position we get a 0 result from the accelerator. With these changes, things work as expected (the new vector size is a multiple of a blockram core size). Probably this happens because we are using direct mapping (a userland pointer that access directly the memory in the accelerator). Perhaps the use of a dedicated openCL buffer and a separated userland buffer with transfers between them should be a better approach
