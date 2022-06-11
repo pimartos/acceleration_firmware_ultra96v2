@@ -12,17 +12,17 @@
    
     This example builds on top of two prior ones: 
 
-    - `3. Offloading ROS 2 publisher - offloaded_doublevadd_publisher <3_offloading_ros2_publisher.html>`_, which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of :code:`1.935 Hz`.
-    - `0. ROS 2 publisher - doublevadd_publisher <0_ros2_publisher.html>`_, which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the KV260 and is only able to publish at :code:`2.2 Hz`.
+    - `3. Offloading ROS 2 publisher - offloaded_doublevadd_publisher <3_offloading_ros2_publisher.html>`_, which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of 0.5 Hz.
+    - `0. ROS 2 publisher - doublevadd_publisher <0_ros2_publisher.html>`_, which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the KV260 and is only able to publish at 2.2 Hz.
 
 ```
 
 
 This example leverages KRS to offload and accelerate the `vadd` function operations to the FPGA, showing how easy it is for ROS package maintainers to extend their packages, include hardware acceleration and create deterministic kernels. The objective is to publish the resulting vector at 10 Hz. 
 
-This example upgrades the previous offloading operation at [3. Offloading ROS 2 publishe - `offloaded_doublevadd_publisher`](3_offloading_ros2_publisher/), and includes an optimization for the dataflow. This allows the publisher to improve its publishing rate from 2 Hz, up to 6 Hz. For that, the HLS `INTERFACE` pragma is used. The HLS INTERFACE specifies how RTL ports are created from the function definition during interface synthesis. Sharing ports helps save FPGA resources by eliminating AXI interfaces, but it can limit the performance of the kernel because all the memory transfers have to go through a single port. The `m_axi` port has  independent READ and WRITE channels, so with a single m_axi port, we can do reads and writes simultaneously but since the kernel (`vadd`) has two vectors from where its reading (simultaneously), we can optimize the dataflows by simply asking for an extra AXI interface.
+This example upgrades the previous offloading operation at [3. Offloading ROS 2 publishe - `offloaded_doublevadd_publisher`](offloadingROS2publisher.md), and includes an optimization for the dataflow. This allows the publisher to improve its publishing rate from 2 Hz, up to 5 Hz. For that, the HLS `INTERFACE` pragma is used. The HLS INTERFACE specifies how RTL ports are created from the function definition during interface synthesis. Sharing ports helps save FPGA resources by eliminating AXI interfaces, but it can limit the performance of the kernel because all the memory transfers have to go through a single port. The `m_axi` port has  independent READ and WRITE channels, so with a single m_axi port, we can do reads and writes simultaneously but since the kernel (`vadd`) has two vectors from where its reading (simultaneously), we can optimize the dataflows by simply asking for an extra AXI interface.
     
-After this dataflow optimization in the kernel, the `accelerated_doublevadd_publisher` ROS 2 package is able to publish at 6 Hz. *For a faster kernel that meets the 10 Hz goal, refer to [5. Faster ROS 2 publisher](5_faster_ros2_publisher/)*.
+After this dataflow optimization in the kernel, the `accelerated_doublevadd_publisher` ROS 2 package is able to publish at 5 Hz. *For a faster kernel that meets the 10 Hz goal, refer to [5. Faster ROS 2 publisher](fasterROSpublisher.md)*.
 
 ```eval_rst
 
@@ -35,7 +35,8 @@ After this dataflow optimization in the kernel, the `accelerated_doublevadd_publ
 
 ## `accelerated_doublevadd_publisher`
 
-Let's take a look at the kernel source code this time:
+Let's take a look at the kernel source code this time (./src/acceleration_examples/accelerated_doublevadd_publisher/src/vadd.cpp)
+change DATA_SIZE to 4032
 
 ```cpp 
 /*
@@ -55,6 +56,7 @@ See https://github.com/Xilinx/Vitis-Tutorials/blob/master/Getting_Started/Vitis
 */
 
 #define DATA_SIZE 4096
+//#define DATA_SIZE 4096
 // TRIPCOUNT identifier
 const int c_size = DATA_SIZE;
 
