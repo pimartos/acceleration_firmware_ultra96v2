@@ -107,6 +107,56 @@ Note the aforementioned `INTERFACE` pragma as the only relevant change introduce
     In other words, the pragmas below define the :code:`INTERFACE` standards for the RTL ports of the :code:`vadd` function.
 ```
 
+We need to change the vector size and make the buffers four times bigger in `offloaded_doublevadd_pubisher.cpp` (/src/acceleration_examples/offloaded_doublevadd_publisher/src) 
+
+in line 9
+```
+#define DATA_SIZE 4032
+```
+in lines 91-96
+```
+  cl::Buffer in1_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+  cl::Buffer in2_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+  cl::Buffer out_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+```
+in line 103 add the fourth argument to the kernel (vector size)
+```
+krnl_vector_add.setArg(3, DATA_SIZE);
+```
+in lines 106-108
+```
+int *in1 = (int *)q.enqueueMapBuffer(in1_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+int *in2 = (int *)q.enqueueMapBuffer(in2_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+int *out = (int *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+```
+Create the ultra96v2.cfg file:
+```
+bash
+$ pico ~/krs_wk/src/acceleration_examples/offloaded_doublevadd_publisher/src/ultra96v2.cfg
+
+# ultra96v2.cfg
+platform=xilinx_ultra96v2_base_202020_1
+save-temps=1
+debug=1
+
+# Enable profiling of data ports
+[profile]
+data=all:all:all
+```
+
+Modify the CMakeLists.txt file (~krs_ws/src/acceleration_examples/offloaded_doublevadd_publisher/CMakeLists.txt)
+```
+Replace in line 59:
+      CONFIG src/kv260.cfg
+with
+      CONFIG src/ultra96v2.cfg
+
+```
+
+
 Let's build it:
 ```bash
 $ cd ~/krs_ws  # head to your KRS workspace
