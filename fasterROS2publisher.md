@@ -22,7 +22,7 @@ This example is the last one of the *ROS 2 publisher series*. It features a triv
 
 - [4. Accelerated ROS 2 publisher - `offloaded_doublevadd_publisher`](4_accelerated_ros2_publisher/), which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of `6.3 Hz`.
 - [3. Offloading ROS 2 publisher - `offloaded_doublevadd_publisher`](3_offloading_ros2_publisher/), which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of `1.935 Hz`.
-- [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the KV260 and is only able to publish at `2.2 Hz`.
+- [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the ultra96v2 and is only able to publish at `2.2 Hz`.
 
 
 ```eval_rst
