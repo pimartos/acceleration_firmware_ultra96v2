@@ -13,16 +13,15 @@
 
     - `4. Accelerated ROS 2 publisher - offloaded_doublevadd_publisher <4_accelerated_ros2_publisher.html>`_, which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of :code:`6.3 Hz`.
     - `3. Offloading ROS 2 publisher - offloaded_doublevadd_publisher <3_offloading_ros2_publisher.html>`_, which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of :code:`1.935 Hz`.
-    - `0. ROS 2 publisher - doublevadd_publisher <0_ros2_publisher.html>`_, which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the KV260 and is only able to publish at :code:`2.2 Hz`.
+    - `0. ROS 2 publisher - doublevadd_publisher <0_ros2_publisher.html>`_, which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the ultra96v2 and is only able to publish at 2 Hz.
 
 ```
-
 
 This example is the last one of the *ROS 2 publisher series*. It features a trivial vector-add ROS 2 publisher, which adds two vector inputs in a loop, and tries to publish the result at 10 Hz. This example will leverage KRS to produce an acceleration kernel that a) optimizes the dataflow and b) leverages parallelism via loop unrolling to meet the initial goal established by the `doublevadd_publisher`.
 
 - [4. Accelerated ROS 2 publisher - `offloaded_doublevadd_publisher`](4_accelerated_ros2_publisher/), which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of `6.3 Hz`.
 - [3. Offloading ROS 2 publisher - `offloaded_doublevadd_publisher`](3_offloading_ros2_publisher/), which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of `1.935 Hz`.
-- [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the ultra96v2 and is only able to publish at `2.2 Hz`.
+- [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the ultra96v2 and is only able to publish at 2 Hz.
 
 
 ```eval_rst
@@ -96,10 +95,54 @@ Besides the dataflow optimizations between input and output arguments in the PL-
 
 Altogether, this leads to the most optimized form of the `vadd` kernel, *delivering both dataflow optimizations and code parallelism*, which is **able to successfully meet the publishing target of 10 Hz**. Overall, when compared to the initial example [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), the one presented in here obtains a **speedup of 5x** (*In fact, the speedup is higher than 5x however the ROS 2 `WallRate` instance is set to `100ms`, so the kernel is idle waiting for new data to arrive, discarding further acceleration opportunities.*).
 
+We need to change the vector size and make the buffers four times bigger in `faster_doublevadd_pubisher.cpp` (/src/acceleration_examples/faster_doublevadd_publisher/src) 
 
+in line 9
+```
+#define DATA_SIZE 4032
+```
+in lines 91-96
+```
+  cl::Buffer in1_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+  cl::Buffer in2_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+  cl::Buffer out_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY,
+    sizeof(int) * DATA_SIZE * 4, NULL, &err);
+```
+in line 103 add the fourth argument to the kernel (vector size)
+```
+krnl_vector_add.setArg(3, DATA_SIZE);
+```
+in lines 106-108
+```
+int *in1 = (int *)q.enqueueMapBuffer(in1_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+int *in2 = (int *)q.enqueueMapBuffer(in2_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+int *out = (int *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, sizeof(int) * DATA_SIZE * 4);  // NOLINT
+```
+Create the ultra96v2.cfg file:
+```
+bash
+$ pico ~/krs_wk/src/acceleration_examples/faster_doublevadd_publisher/src/ultra96v2.cfg
 
+# ultra96v2.cfg
+platform=xilinx_ultra96v2_base_202020_1
+save-temps=1
+debug=1
 
+# Enable profiling of data ports
+[profile]
+data=all:all:all
+```
 
+Modify the CMakeLists.txt file (~krs_ws/src/acceleration_examples/faster_doublevadd_publisher/CMakeLists.txt)
+```
+Replace in line 59:
+      CONFIG src/kv260.cfg
+with
+      CONFIG src/ultra96v2.cfg
+
+```
 
 Let's build it:
 ```bash
