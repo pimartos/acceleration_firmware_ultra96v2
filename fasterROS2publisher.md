@@ -11,7 +11,7 @@
    
     Past examples of this series include: 
 
-    - `4. Accelerated ROS 2 publisher - offloaded_doublevadd_publisher <4_accelerated_ros2_publisher.html>`_, which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of :code:`6.3 Hz`.
+    - `4. Accelerated ROS 2 publisher - offloaded_doublevadd_publisher <4_accelerated_ros2_publisher.html>`_, which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of 5 Hz.
     - `3. Offloading ROS 2 publisher - offloaded_doublevadd_publisher <3_offloading_ros2_publisher.html>`_, which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of :code:`1.935 Hz`.
     - `0. ROS 2 publisher - doublevadd_publisher <0_ros2_publisher.html>`_, which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the ultra96v2 and is only able to publish at 2 Hz.
 
@@ -19,7 +19,7 @@
 
 This example is the last one of the *ROS 2 publisher series*. It features a trivial vector-add ROS 2 publisher, which adds two vector inputs in a loop, and tries to publish the result at 10 Hz. This example will leverage KRS to produce an acceleration kernel that a) optimizes the dataflow and b) leverages parallelism via loop unrolling to meet the initial goal established by the `doublevadd_publisher`.
 
-- [4. Accelerated ROS 2 publisher - `offloaded_doublevadd_publisher`](4_accelerated_ros2_publisher/), which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of `6.3 Hz`.
+- [4. Accelerated ROS 2 publisher - `offloaded_doublevadd_publisher`](4_accelerated_ros2_publisher/), which offloads and accelerates the `vadd` operation to the FPGA, optimizing the dataflow and leading to a deterministic vadd operation with an improved publishing rate of `5 Hz`.
 - [3. Offloading ROS 2 publisher - `offloaded_doublevadd_publisher`](3_offloading_ros2_publisher/), which offloads the `vadd` operation to the FPGA and leads to a deterministic vadd operation, yet insuficient overall publishing rate of `1.935 Hz`.
 - [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), which runs completely on the scalar quad-core Cortex-A53 Application Processing Units (APUs) of the ultra96v2 and is only able to publish at 2 Hz.
 
@@ -93,7 +93,7 @@ Besides the dataflow optimizations between input and output arguments in the PL-
    \texttt{16 unsigned int}  \cdot 4 \frac{bytes}{\texttt{unsigned int}} \cdot 8 \frac{bits}{byte} = 512 \texttt{ bits}
 ```
 
-Altogether, this leads to the most optimized form of the `vadd` kernel, *delivering both dataflow optimizations and code parallelism*, which is **able to successfully meet the publishing target of 10 Hz**. Overall, when compared to the initial example [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), the one presented in here obtains a **speedup of 5x** (*In fact, the speedup is higher than 5x however the ROS 2 `WallRate` instance is set to `100ms`, so the kernel is idle waiting for new data to arrive, discarding further acceleration opportunities.*).
+Altogether, this leads to the most optimized form of the `vadd` kernel, *delivering both dataflow optimizations and code parallelism*, getting a 6.7 Hz publish frequency. Overall, when compared to the initial example [0. ROS 2 publisher - `doublevadd_publisher`](0_ros2_publisher/), the one presented in here obtains a **speedup of 3x** (*In fact, the speedup is higher however the ROS 2 `WallRate` instance is set to `100ms`, so the kernel is idle waiting for new data to arrive, discarding further acceleration opportunities.*).
 
 We need to change the vector size and make the buffers four times bigger in `faster_doublevadd_pubisher.cpp` (/src/acceleration_examples/faster_doublevadd_publisher/src) 
 
@@ -162,85 +162,104 @@ $ colcon build --merge-install  # about 2 mins
 # source the workspace as an overlay
 $ source install/setup.bash
 
-# select kv260 firmware (in case you've been experimenting with something else)
-$ colcon acceleration select kv260
+# select ultra96v2 firmware (in case you've been experimenting with something else)
+$ colcon acceleration select ultra96v2
 
 # build accelerated_doublevadd_publisher
-$ colcon build --build-base=build-kv260 --install-base=install-kv260 --merge-install --mixin kv260 --packages-select ament_vitis ros2acceleration faster_doublevadd_publisher
+$ colcon build --build-base=build-ultra96v2 --install-base=install-ultra96v2 --merge-install --mixin ultra96v2 --packages-select ament_vitis ros2acceleration faster_doublevadd_publisher
 
-# copy to KV260 rootfs, e.g.
-$ scp -r install-kv260/* petalinux@192.168.1.86:/ros2_ws/
+# copy to SD card rootfs:
+$ sudo cp -r install-ultra96v2/* /media/usuario/vos_2/krs_ws
+$ sync
 ```
 
 and run it:
 
-```bash
-$ sudo su
+Every accelerator needs a `shell.json` file:
+
+```
+bash
 $ source /usr/bin/ros_setup.bash  # source the ROS 2 installation
 
-$ . /ros2_ws/local_setup.bash     # source the ROS 2 overlay workspace we just 
+$ . /krs_ws/local_setup.bash     # source the ROS 2 overlay workspace we just 
                                   # created. Note it has been copied to the SD 
                                   # card image while being created.
 
+# restart the daemon that manages the acceleration kernels to create /lib/firmware/xilinx/faster_doublevadd_publisher
+$ ros2 acceleration stop
+$ ros2 acceleration start
+
+# stop the daemon to create the shell.json files
+$ ros2 acceleration stop
+
+# add shell.json files
+vi /lib/firmware/xilinx/faster_doublevadd_publisher/shell.json
+{
+    "shell_type" : "XRT_FLAT",
+    "num_slots": "1"
+}
+
+# reboot
+$ shutdown -r now
+
+$ source /usr/bin/ros_setup.bash  # source the ROS 2 installation
+
+$ . /krs_ws/local_setup.bash     # source the ROS 2 overlay workspace we just 
+                                  # created. Note it has been copied to the SD 
+                                  # card image while being created.
+
+# Change to the accelerator directory
+$ cd /krs_ws/lib/faster_doublevadd_publisher
+
+# Load the accelerator 
+$ ros2 acceleration select faster_doublevadd_publisher
+
 # restart the daemon that manages the acceleration kernels
-$ ros2 acceleration stop; ros2 acceleration start
+$ ros2 acceleration stop
+$ ros2 acceleration start
 
 # list the accelerators
 $ ros2 acceleration list
-                                       Accelerator           Type    Active
-                  accelerated_doublevadd_publisher       XRT_FLAT         0
-                                          kv260-dp       XRT_FLAT         1
-                                              base       XRT_FLAT         0
-                    offloaded_doublevadd_publisher       XRT_FLAT         0
-                       faster_doublevadd_publisher       XRT_FLAT         0                    
+Accelerator                            Base                            Type             #slots         Active_slot
 
-# select the faster_doublevadd_publisher
+  faster_doublevadd_publisher  	    faster_doublevadd_publisher        XRT_FLAT         0                  -1
+  accelerated_doublevadd_publisher  accelerated_doublevadd_publisher   XRT_FLAT         0                  -1
+  offloaded_doublevadd_publisher  offloaded_doublevadd_publisher       XRT_FLAT         0                  -1
+                            base                            base       XRT_FLAT         0                  -1
+
+# select the accelerated_doublevadd_publisher
 $ ros2 acceleration select faster_doublevadd_publisher
 
 # launch binary 
-$ cd /ros2_ws/lib/faster_doublevadd_publisher
 $ ros2 topic hz /vector_acceleration --window 10 &
 $ ros2 run faster_doublevadd_publisher faster_doublevadd_publisher
-INFO: Found Xilinx Platform
-INFO: Loading 'vadd.xclbin'
-[INFO] [1629669100.348149277] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 0'
-[INFO] [1629669100.437331164] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 1'
-[INFO] [1629669100.626349680] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 2'
-[INFO] [1629669100.737320080] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 3'
-[INFO] [1629669100.837296068] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 4'
-[INFO] [1629669100.937279027] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 5'
-[INFO] [1629669101.037308705] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 6'
-[INFO] [1629669101.137309244] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 7'
-[INFO] [1629669101.237301062] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 8'
-[INFO] [1629669101.337311561] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 9'
-[INFO] [1629669101.437294539] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 10'
-[INFO] [1629669101.537323708] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 11'
-average rate: 9.091
-	min: 0.100s max: 0.189s std dev: 0.02659s window: 10
-[INFO] [1629669101.637296386] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 12'
-[INFO] [1629669101.737290495] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 13'
-[INFO] [1629669101.837324683] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 14'
-[INFO] [1629669101.937318152] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 15'
-[INFO] [1629669102.037294040] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 16'
-[INFO] [1629669102.137285269] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 17'
-[INFO] [1629669102.237289977] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 18'
-[INFO] [1629669102.337286815] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 19'
-[INFO] [1629669102.437316744] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 20'
-[INFO] [1629669102.537339583] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 21'
-[INFO] [1629669102.637276821] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 22'
-average rate: 10.001
-	min: 0.100s max: 0.100s std dev: 0.00007s window: 10
-[INFO] [1629669102.737308289] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 23'
-[INFO] [1629669102.837287528] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 24'
-[INFO] [1629669102.937298656] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 25'
-[INFO] [1629669103.037285145] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 26'
-[INFO] [1629669103.137287133] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 27'
-[INFO] [1629669103.237286742] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 28'
-[INFO] [1629669103.337307070] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 29'
-[INFO] [1629669103.437327789] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 30'
-[INFO] [1629669103.537345337] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 31'
-[INFO] [1629669103.637311146] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 32'
-average rate: 10.000
-	min: 0.100s max: 0.100s std dev: 0.00004s window: 10
+
+[INFO] [1520601618.052719680] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 9'
+[INFO] [1520601618.252669520] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 10'
+[INFO] [1520601618.386791040] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 11'
+[INFO] [1520601618.520793390] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 12'
+[INFO] [1520601618.654800060] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 13'
+[INFO] [1520601618.854827450] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 14'
+[INFO] [1520601618.988827330] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 15'
+average rate: 6.500
+        min: 0.134s max: 0.200s std dev: 0.03028s window: 10
+[INFO] [1520601619.122914260] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 16'
+[INFO] [1520601619.257509340] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 17'
+[INFO] [1520601619.457075040] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 18'
+[INFO] [1520601619.591478010] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 19'
+[INFO] [1520601619.726018860] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 20'
+[INFO] [1520601619.860117600] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 21'
+[INFO] [1520601620.060155240] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 22'
+average rate: 6.495
+        min: 0.134s max: 0.200s std dev: 0.03007s window: 10
+[INFO] [1520601620.195554070] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 23'
+[INFO] [1520601620.330336770] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 24'
+[INFO] [1520601620.464646740] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 25'
+[INFO] [1520601620.664534150] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 26'
+[INFO] [1520601620.798578020] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 27'
+[INFO] [1520601620.932545890] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 28'
+[INFO] [1520601621.066545900] [faster_doublevadd_publisher]: Publishing: 'vadd finished, iteration: 29'
+average rate: 6.783
+        min: 0.134s max: 0.200s std dev: 0.02638s window: 10
 ...
 ```
