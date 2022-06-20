@@ -3,6 +3,7 @@ Changelog for package acceleration_firmware_ultra96v2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 krs_alpha 1.0.0 (2022_06-13)
+----------------------------
 * Release for krs_alpha
 * Software and hardware examples work on ultra96v2 board
 * No emulation
